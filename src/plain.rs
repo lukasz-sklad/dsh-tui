@@ -2,7 +2,8 @@
 
 use crate::client::{Client, IncomingRequest, RecvOutcome};
 use crate::settings::{
-    self, ChatEntry, ExecutionMode, SessionRecord, TokenUsage, save_last_session, save_session,
+    self, ChatEntry, ExecutionMode, SessionRecord, Settings, ThemeName, TokenUsage,
+    save_last_session, save_session,
 };
 use crate::{LaunchSpec, new_session_id, truncate};
 use serde_json::{Value, json};
@@ -151,16 +152,53 @@ pub fn run(
             "/help" => {
                 println!(
                     "/ask <treść> — wyślij wiadomość\n\
-                     /model <id> — pokaż lub zmień model\n\
+                     /model <id> — pokaż obecny model\n\
                      /mode <tryb> — zmień tryb (workspace-write|auto|plan|read-only)\n\
+                     /theme [dark|light|sepia|neon] — pokaż lub zmień motyw UI\n\
                      /new — nowa sesja · /clear — wyczyść widok · /exit — wyjście"
                 );
+                continue;
+            }
+            "/theme" => {
+                let current = Settings::load().theme;
+                println!(
+                    "obecny motyw: {} · dostępne: dark, light, sepia, neon (zmień: /theme <nazwa>)",
+                    current.label()
+                );
+                continue;
+            }
+            "/mode" => {
+                println!(
+                    "obecny tryb: {} · użycie: /mode <workspace-write|auto|plan|read-only>",
+                    record.mode
+                );
+                continue;
+            }
+            "/ask" | "/btw" => {
+                println!("dsh-tui: użycie: /ask <treść>");
                 continue;
             }
             _ => {}
         }
         if line == "/model" {
             println!("obecny model: {} (effort: {})", record.model, record.effort);
+            continue;
+        }
+        if let Some(arg) = line.strip_prefix("/theme ") {
+            match ThemeName::parse(arg) {
+                Some(theme) => {
+                    let mut st = Settings::load();
+                    st.theme = theme;
+                    if let Err(err) = st.save() {
+                        eprintln!("dsh-tui: błąd zapisu motywu: {err}");
+                    } else {
+                        println!("dsh-tui: motyw zmieniony na {} (zapisano w settings.json)", theme.as_str());
+                    }
+                }
+                None => {
+                    println!("dsh-tui: nieznany motyw — użyj: /theme <dark|light|sepia|neon>");
+                }
+            }
             continue;
         }
         if let Some(rest) = line.strip_prefix("/mode ") {
@@ -192,9 +230,16 @@ pub fn run(
                 None => line,
             },
         };
-        if prompt.is_empty() {
+        if prompt.trim().is_empty() {
             println!("dsh-tui: użycie: /ask <treść>");
             continue;
+        }
+        if line.starts_with('/') && !line.starts_with("/ask ") && !line.starts_with("/btw ") {
+            let cmd = line.split_whitespace().next().unwrap_or("");
+            if !matches!(cmd, "/plan" | "/goal" | "/compact" | "/permission") {
+                println!("dsh-tui: nieznana komenda `{cmd}` — wpisz /help");
+                continue;
+            }
         }
         if let Err(error) = run_turn(
             client,

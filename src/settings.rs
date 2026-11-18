@@ -161,12 +161,30 @@ impl ThemeName {
         }
     }
 
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Dark => "dark",
+            Self::Light => "light",
+            Self::Sepia => "sepia",
+            Self::Neon => "neon",
+        }
+    }
+
     pub fn label(&self) -> &'static str {
         match self {
             Self::Dark => "Dark (ciemny)",
             Self::Light => "Light (jasny)",
             Self::Sepia => "Sepia (pergamin)",
             Self::Neon => "Neon (wysoki kontrast)",
+        }
+    }
+
+    pub fn description(&self) -> &'static str {
+        match self {
+            Self::Dark => "Ciemny (domyślny kontrastowy)",
+            Self::Light => "Jasny (dzienny)",
+            Self::Sepia => "Sepia (ciepły pergamin)",
+            Self::Neon => "Neon (wysoki kontrast cyberpunk)",
         }
     }
 

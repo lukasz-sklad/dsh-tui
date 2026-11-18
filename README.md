@@ -18,7 +18,7 @@ Program uruchamia `dsh --profile sdk` jako proces potomny i komunikuje się prze
 
 - `dsh` w `PATH` (`npm i -g @deepseek-ai/dsh`) — albo zmienna `DSH_BIN=/ścieżka/do/dsh`
 - `DEEPSEEK_API_KEY` wyeksportowany w środowisku
-- Rust (`cargo`) lokalnie lub `podman` z obrazem `localhost/craft-builder:latest` (dla SteamOS)
+- Rust (`cargo`) lokalnie **albo** `podman` z obrazem kontenera posiadającym toolchain Rust (np. własny obraz przekazany przez `DSH_TUI_BUILDER_IMAGE` lub oficjalny `docker.io/library/rust:latest` — przydatne na niemutowalnych systemach typu SteamOS bez natywnego `cargo`/`gcc`)
 
 ---
 
@@ -26,11 +26,22 @@ Program uruchamia `dsh --profile sdk` jako proces potomny i komunikuje się prze
 
 ```sh
 ./install.sh            # buduje release (-O3, Fat LTO; automatyczne znver2 na SteamOS) i kopiuje do ~/.local/bin/dsh-tui
-# albo
+# albo z własnym obrazem kontenera Podman:
+DSH_TUI_BUILDER_IMAGE=moj-rust-builder ./install.sh
+# albo bezpośrednio przez Cargo:
 cargo install --path .
 ```
 
-Skrypt `install.sh` automatycznie wykrywa lokalne `cargo` oraz procesor (na Steam Decku / SteamOS włącza `-C target-cpu=znver2`, na innych maszynach buduje przenośnie, chyba że podano `RUSTFLAGS`), a w razie braku kompilatora w hostowym `PATH` uruchamia kompilację w kontenerze Podman `localhost/craft-builder:latest` z cache na dysku NVMe (`~/.cache/cargo` i `~/.cache/dsh-tui-target`).
+Skrypt `install.sh` automatycznie wykrywa lokalne `cargo` oraz procesor (na Steam Decku / SteamOS włącza `-C target-cpu=znver2`, na innych maszynach buduje przenośnie, chyba że podano `RUSTFLAGS`). Gdy w hostowym `PATH` nie ma kompilatora `cargo`, skrypt uruchamia kompilację w kontenerze Podman z cache na dysku NVMe (`~/.cache/cargo` i `~/.cache/dsh-tui-target`):
+
+> [!NOTE]
+> `localhost/craft-builder:latest` jest lokalnym obrazem kontenera zbudowanym przez autora projektu (z preinstalowanym toolchainem Rust). Na innych maszynach bez lokalnego `cargo` każdy użytkownik może zbudować własny kontener pod dowolną nazwą (lub pozwolić skryptowi użyć automatycznego fallbacku `docker.io/library/rust:latest`):
+>
+> ```sh
+> printf 'FROM docker.io/library/rust:latest\n' > Containerfile.rust
+> podman build -t moj-rust-builder -f Containerfile.rust .
+> DSH_TUI_BUILDER_IMAGE=moj-rust-builder ./install.sh
+> ```
 
 ---
 
@@ -116,7 +127,7 @@ dsh-tui --plain                                 # wymuś liniowy REPL
 | `/context` / `/usage` | Pasek zapełnienia okna 1M oraz rozbicie tokenów (`input`, `output`, `cache read`, `cache write`) |
 | `/tasks` / `/todos` | Podgląd aktywnego celu, listy zadań `todo/write` oraz podagentów |
 | `/settings` | Interaktywne menu ustawień (motyw, myślenie, panel narzędzi, auto-approve, domyślny effort) |
-| `/theme <dark\|light\|sepia\|neon>` | Natychmiastowe przełączenie i zapis motywu |
+| `/theme [dark\|light\|sepia\|neon]` | Interaktywny wybór motywu na żywo lub natychmiastowe przełączenie i zapis |
 | `/thinking` / `/tools` | Przełączenie wyświetlania bloków myślenia / panelu narzędzi |
 | `/new` / `/clear` | Nowa sesja / wyczyszczenie widoku czatu |
 | `/rename <tytuł>` / `/title <tytuł>` | Nadanie własnego tytułu rozmowie |

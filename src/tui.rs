@@ -54,7 +54,7 @@ const SLASH_COMMANDS: &[SlashCommandDef] = &[
     SlashCommandDef { name: "/usage", usage: "/usage", desc: "Alias dla /context", takes_arg: false },
     SlashCommandDef { name: "/tasks", usage: "/tasks", desc: "Lista zadań agenta, cel i podagenci", takes_arg: false },
     SlashCommandDef { name: "/settings", usage: "/settings", desc: "Konfiguracja motywów, myślenia i paneli", takes_arg: false },
-    SlashCommandDef { name: "/theme", usage: "/theme [dark|light|sepia|neon]", desc: "Przełącz motyw kolorystyczny", takes_arg: true },
+    SlashCommandDef { name: "/theme", usage: "/theme [dark|light|sepia|neon]", desc: "Wybierz lub przełącz motyw kolorystyczny (dark|light|sepia|neon)", takes_arg: false },
     SlashCommandDef { name: "/thinking", usage: "/thinking", desc: "Pokaż/ukryj bloki myślenia modelu (Ctrl+R)", takes_arg: false },
     SlashCommandDef { name: "/tools", usage: "/tools", desc: "Pokaż/ukryj boczny panel narzędzi (Ctrl+T)", takes_arg: false },
     SlashCommandDef { name: "/new", usage: "/new", desc: "Rozpocznij nową sesję", takes_arg: false },
@@ -62,11 +62,11 @@ const SLASH_COMMANDS: &[SlashCommandDef] = &[
     SlashCommandDef { name: "/rename", usage: "/rename <tytuł>", desc: "Zmień tytuł bieżącej rozmowy", takes_arg: true },
     SlashCommandDef { name: "/title", usage: "/title <tytuł>", desc: "Alias dla /rename", takes_arg: true },
     SlashCommandDef { name: "/fork", usage: "/fork", desc: "Utwórz kopię (fork) bieżącej sesji", takes_arg: false },
-    SlashCommandDef { name: "/rewind", usage: "/rewind [n]", desc: "Cofnij ostatnie n tur w widoku", takes_arg: true },
+    SlashCommandDef { name: "/rewind", usage: "/rewind [n]", desc: "Cofnij ostatnie n tur w widoku", takes_arg: false },
     SlashCommandDef { name: "/copy", usage: "/copy [last|code|all]", desc: "Kopiuj odpowiedź, blok kodu lub czat", takes_arg: false },
-    SlashCommandDef { name: "/export", usage: "/export [plik.md]", desc: "Zapisz transkrypt rozmowy do Markdown", takes_arg: true },
-    SlashCommandDef { name: "/search", usage: "/search <fraza>", desc: "Szukaj w historii rozmowy (Ctrl+F)", takes_arg: true },
-    SlashCommandDef { name: "/cwd", usage: "/cwd [ścieżka]", desc: "Pokaż lub zmień katalog roboczy agenta", takes_arg: true },
+    SlashCommandDef { name: "/export", usage: "/export [plik.md]", desc: "Zapisz transkrypt rozmowy do Markdown", takes_arg: false },
+    SlashCommandDef { name: "/search", usage: "/search [fraza]", desc: "Szukaj w historii rozmowy (Ctrl+F)", takes_arg: false },
+    SlashCommandDef { name: "/cwd", usage: "/cwd [ścieżka]", desc: "Pokaż lub zmień katalog roboczy agenta", takes_arg: false },
     SlashCommandDef { name: "/add-dir", usage: "/add-dir <ścieżka>", desc: "Dodaj katalog do kontekstu @wzmianek", takes_arg: true },
     SlashCommandDef { name: "/plan", usage: "/plan [zadanie]", desc: "Przełącz tryb plan lub wyślij plan", takes_arg: false },
     SlashCommandDef { name: "/goal", usage: "/goal <cel>", desc: "Uruchom autonomiczną pętlę celu w dsh", takes_arg: true },
@@ -124,6 +124,9 @@ enum Overlay {
         selected: usize,
     },
     ModeSelector {
+        selected: usize,
+    },
+    ThemeSelector {
         selected: usize,
     },
     SessionPicker {
@@ -724,6 +727,33 @@ impl App {
                         let next_mode = modes[*selected];
                         keep = false;
                         self.apply_mode(client, next_mode);
+                    }
+                    _ => {}
+                }
+            }
+            Overlay::ThemeSelector { selected } => {
+                let themes = ThemeName::all();
+                match key.code {
+                    KeyCode::Esc | KeyCode::Char('q') => {
+                        let _ = self.settings.save();
+                        keep = false;
+                    }
+                    KeyCode::Up | KeyCode::Char('k') => {
+                        *selected = (*selected + themes.len() - 1) % themes.len();
+                        self.settings.theme = themes[*selected];
+                    }
+                    KeyCode::Down | KeyCode::Char('j') | KeyCode::Tab => {
+                        *selected = (*selected + 1) % themes.len();
+                        self.settings.theme = themes[*selected];
+                    }
+                    KeyCode::Enter => {
+                        self.settings.theme = themes[*selected];
+                        let _ = self.settings.save();
+                        keep = false;
+                        self.info(&format!(
+                            "motyw zmieniony na: {} (zapisano w settings.json)",
+                            self.settings.theme.as_str()
+                        ));
                     }
                     _ => {}
                 }
@@ -1408,6 +1438,36 @@ impl App {
                 self.overlay = Some(Overlay::SettingsMenu { selected: 0 });
                 return true;
             }
+            "/theme" => {
+                let selected = ThemeName::all()
+                    .iter()
+                    .position(|t| *t == self.settings.theme)
+                    .unwrap_or(0);
+                self.overlay = Some(Overlay::ThemeSelector { selected });
+                return true;
+            }
+            "/search" => {
+                self.overlay = Some(Overlay::SearchInput {
+                    query: String::new(),
+                });
+                return true;
+            }
+            "/rename" | "/title" => {
+                self.info("użycie: /rename <nowy tytuł rozmowy>");
+                return true;
+            }
+            "/add-dir" => {
+                self.info("użycie: /add-dir <ścieżka>");
+                return true;
+            }
+            "/goal" => {
+                self.info("użycie: /goal <cel dla agenta>");
+                return true;
+            }
+            "/btw" | "/ask" => {
+                self.info("użycie: /ask <treść pytania>");
+                return true;
+            }
             "/thinking" => {
                 self.settings.show_thinking = !self.settings.show_thinking;
                 let _ = self.settings.save();
@@ -1555,7 +1615,7 @@ impl App {
                 let _ = self.settings.save();
                 self.info(&format!("zmieniono motyw na: {}", theme.label()));
             } else {
-                self.info("dostępne motywy: dark, light, sepia, neon");
+                self.info("nieznany motyw — wpisz /theme (wybór z listy) lub /theme <dark|light|sepia|neon>");
             }
             return true;
         }
@@ -1613,6 +1673,12 @@ impl App {
                 self.refresh_files_cache(true);
                 self.info(&format!("dodano katalog kontekstu: {path}"));
             }
+            return true;
+        }
+        if let Some(unknown_cmd) = unforwarded_slash_command(line) {
+            self.info(&format!(
+                "nieznana lub niepełna komenda `{unknown_cmd}` — wpisz /help, aby zobaczyć listę komend"
+            ));
             return true;
         }
         false
@@ -3163,6 +3229,55 @@ fn draw_overlay(
             )));
             render_modal_box(frame, popup, " Tryb pracy i uprawnienia ", lines, palette);
         }
+        Overlay::ThemeSelector { selected } => {
+            let popup = centered_rect(70, 40, area);
+            frame.render_widget(Clear, popup);
+            let themes = ThemeName::all();
+            let mut lines = vec![
+                Line::from(Span::styled(
+                    "Wybierz motyw kolorystyczny (podgląd na żywo):",
+                    Style::default().fg(palette.muted),
+                )),
+                Line::from(""),
+            ];
+            for (idx, theme) in themes.iter().enumerate() {
+                let is_sel = idx == *selected;
+                let active = if *theme == app.settings.theme {
+                    " [aktywny]"
+                } else {
+                    ""
+                };
+                let style = if is_sel {
+                    Style::default()
+                        .bg(palette.selection_bg)
+                        .fg(palette.selection_fg)
+                        .add_modifier(Modifier::BOLD)
+                } else {
+                    Style::default().fg(palette.fg)
+                };
+                lines.push(Line::from(Span::styled(
+                    format!(
+                        "{} {:<7} — {}{active}",
+                        if is_sel { "❯" } else { " " },
+                        theme.as_str(),
+                        theme.description(),
+                    ),
+                    style,
+                )));
+            }
+            lines.push(Line::from(""));
+            lines.push(Line::from(Span::styled(
+                "↑/↓ podgląd na żywo · Enter zatwierdź · Esc zamknij",
+                Style::default().fg(palette.warning),
+            )));
+            render_modal_box(
+                frame,
+                popup,
+                " Wybór motywu kolorystycznego (/theme) ",
+                lines,
+                palette,
+            );
+        }
         Overlay::SessionPicker {
             sessions,
             query,
@@ -3808,9 +3923,48 @@ fn wrap_paragraph(text: &str, width: usize) -> Vec<String> {
     lines
 }
 
+/// Return `Some(cmd)` when a slash-prefixed input line is not a native `dsh`
+/// command so local-only or misspelled `/...` commands never leak to the chat model.
+fn unforwarded_slash_command(line: &str) -> Option<&str> {
+    let trimmed = line.trim();
+    if !trimmed.starts_with('/') {
+        return None;
+    }
+    let cmd = trimmed.split_whitespace().next().unwrap_or("");
+    if matches!(
+        cmd,
+        "/plan" | "/goal" | "/compact" | "/permission" | "/ask" | "/btw"
+    ) {
+        None
+    } else {
+        Some(cmd)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn slash_commands_theme_opens_modal_and_unknown_slash_is_blocked() {
+        let theme_cmd = SLASH_COMMANDS
+            .iter()
+            .find(|c| c.name == "/theme")
+            .expect("/theme command defined");
+        assert!(
+            !theme_cmd.takes_arg,
+            "/theme must open ThemeSelector on Enter without requiring a trailing arg"
+        );
+
+        assert_eq!(unforwarded_slash_command("neon"), None);
+        assert_eq!(unforwarded_slash_command("/unknown"), Some("/unknown"));
+        assert_eq!(unforwarded_slash_command("/the"), Some("/the"));
+        assert_eq!(unforwarded_slash_command("/compact"), None);
+        assert_eq!(unforwarded_slash_command("/goal uruchom testy"), None);
+        assert_eq!(unforwarded_slash_command("/plan zrób audyt"), None);
+        assert_eq!(unforwarded_slash_command("/ask cześć"), None);
+        assert_eq!(unforwarded_slash_command("/btw pytanie"), None);
+    }
 
     #[test]
     fn extracts_at_mentions_and_tool_diffs() {

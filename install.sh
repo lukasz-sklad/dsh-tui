@@ -28,7 +28,14 @@ if command -v cargo >/dev/null 2>&1; then
         BIN_PATH="$REPO_DIR/target/release/dsh-tui"
     fi
 elif command -v podman >/dev/null 2>&1; then
-    IMAGE="${DSH_TUI_BUILDER_IMAGE:-localhost/craft-builder:latest}"
+    if [ -n "${DSH_TUI_BUILDER_IMAGE:-}" ]; then
+        IMAGE="$DSH_TUI_BUILDER_IMAGE"
+    elif podman image exists localhost/craft-builder:latest >/dev/null 2>&1; then
+        IMAGE="localhost/craft-builder:latest"
+    else
+        IMAGE="docker.io/library/rust:latest"
+        printf 'dsh-tui: używam domyślnego obrazu kontenera %s (możesz go nadpisać przez DSH_TUI_BUILDER_IMAGE)\n' "$IMAGE" >&2
+    fi
     mkdir -p "$CARGO_CACHE/registry" "$CARGO_CACHE/git"
     podman run --rm \
         -v "$REPO_DIR:/work" \
