@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="console-application">
+  <id>io.github.lukasz_sklad.dsh_tui</id>
+  <metadata_license>FSFAP</metadata_license>
+  <project_license>MIT</project_license>
+  <name>dsh-tui</name>
+  <summary>Terminalowy klient czatu dla DeepSeek Harness (dsh --profile sdk)</summary>
+  <description>
+    <p>
+      dsh-tui jest pełnoekranowym interfejsem terminalowym (ratatui) oraz narzędziem
+      wiersza poleceń dla agenta DeepSeek Harness. Obsługuje sesje, tryby uprawnień,
+      bloki myślenia, podgląd diffów, motywy kolorystyczne oraz wyjście JSON/NDJSON.
+    </p>
+  </description>
+  <url type="homepage">https://github.com/lukasz-sklad/dsh-tui</url>
+  <provides>
+    <binary>dsh-tui</binary>
+  </provides>
+  <releases>
+    <release version="0.3.0" date="2026-11-18"/>
+  </releases>
+</component>

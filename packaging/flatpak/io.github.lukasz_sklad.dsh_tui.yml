@@ -1,0 +1,35 @@
+app-id: io.github.lukasz_sklad.dsh_tui
+runtime: org.freedesktop.Platform
+runtime-version: '24.08'
+sdk: org.freedesktop.Sdk
+command: dsh-tui
+
+finish-args:
+  - --share=network
+  - --share=ipc
+  - --filesystem=host
+  - --talk-name=org.freedesktop.Flatpak
+
+modules:
+  - name: dsh-tui
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 dsh-tui /app/bin/dsh-tui-bin
+      - install -Dm755 dsh-host.sh /app/bin/dsh-host
+      - install -Dm755 dsh-tui-wrapper.sh /app/bin/dsh-tui
+      - install -Dm644 io.github.lukasz_sklad.dsh_tui.desktop /app/share/applications/io.github.lukasz_sklad.dsh_tui.desktop
+      - install -Dm644 io.github.lukasz_sklad.dsh_tui.svg /app/share/icons/hicolor/scalable/apps/io.github.lukasz_sklad.dsh_tui.svg
+      - install -Dm644 io.github.lukasz_sklad.dsh_tui.metainfo.xml /app/share/metainfo/io.github.lukasz_sklad.dsh_tui.metainfo.xml
+    sources:
+      - type: file
+        path: ../../target/release/dsh-tui
+      - type: file
+        path: dsh-host.sh
+      - type: file
+        path: dsh-tui-wrapper.sh
+      - type: file
+        path: io.github.lukasz_sklad.dsh_tui.desktop
+      - type: file
+        path: io.github.lukasz_sklad.dsh_tui.svg
+      - type: file
+        path: io.github.lukasz_sklad.dsh_tui.metainfo.xml
