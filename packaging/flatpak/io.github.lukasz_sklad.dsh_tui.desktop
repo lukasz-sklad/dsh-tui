@@ -5,5 +5,5 @@ Comment=Terminalowy interfejs czatu dla DeepSeek Harness (dsh --profile sdk)
 Exec=dsh-tui
 Icon=io.github.lukasz_sklad.dsh_tui
 Terminal=true
-Categories=Development;Utility;ConsoleOnly;
+Categories=Development;ConsoleOnly;
 Keywords=deepseek;ai;terminal;tui;dsh;

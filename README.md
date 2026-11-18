@@ -148,18 +148,26 @@ Domyślnie w `~/.dsh/dsh-tui/`:
 | `src/plain.rs` | Runner `--print` (`text`, `json`, `stream-json`) i nieblokujący liniowy REPL |
 | `src/markdown.rs` | Renderer Markdown (nagłówki, tabele, checkboxy, kolorowanie składni i diffów) |
 | `install.sh` | Budowanie wydania release (lokalnie lub przez Podman) i instalacja w `~/.local/bin` |
-| `packaging/flatpak/` | Manifest Flatpak (`io.github.lukasz_sklad.dsh_tui.yml`), ikona SVG, plik `.desktop` i AppStream |
-| `.github/workflows/ci.yml` | Automatyczne testy, kompilacja release oraz paczka `.flatpak` na GitHub Actions |
+| `packaging/flatpak/` | Manifest Flathub (`io.github.lukasz_sklad.dsh_tui.yml`), `cargo-sources.json`, `generate-cargo-sources.py`, `flathub.json`, ikona SVG, `.desktop` i AppStream |
+| `.github/workflows/ci.yml` | Testy, walidacja AppStream/Desktop oraz kompilacja Flatpak offline ze źródeł (`rust-stable//26.08`) |
 
 ---
 
-## Paczka Flatpak i GitHub Actions
+## Paczka Flatpak i publikacja na Flathub
 
-Repozytorium zawiera gotowy manifest [`packaging/flatpak/io.github.lukasz_sklad.dsh_tui.yml`](packaging/flatpak/io.github.lukasz_sklad.dsh_tui.yml) oraz workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml), który po każdym wypchnięciu na gałąź `main`:
-1. Uruchamia `cargo test --locked` i buduje binarkę `target/release/dsh-tui`.
-2. Składa paczkę Flatpak (`dsh-tui-x86_64.flatpak`) w środowisku `org.freedesktop.Platform//26.08` i publikuje ją jako artefakt w zakładce **Actions**.
+Repozytorium jest przygotowane do budowy **offline ze źródeł** zgodnie z wymaganiami Flathub:
 
-Instalacja pobranej paczki `.flatpak`:
+- Manifest [`packaging/flatpak/io.github.lukasz_sklad.dsh_tui.yml`](packaging/flatpak/io.github.lukasz_sklad.dsh_tui.yml) korzysta z `org.freedesktop.Platform//26.08` oraz rozszerzenia `org.freedesktop.Sdk.Extension.rust-stable//26.08`.
+- Wszystkie zależności z `Cargo.lock` są zadeklarowane w [`packaging/flatpak/cargo-sources.json`](packaging/flatpak/cargo-sources.json) (generowanym automatycznie przez [`packaging/flatpak/generate-cargo-sources.py`](packaging/flatpak/generate-cargo-sources.py)).
+- Pliki [`flathub.json`](packaging/flatpak/flathub.json), [`io.github.lukasz_sklad.dsh_tui.metainfo.xml`](packaging/flatpak/io.github.lukasz_sklad.dsh_tui.metainfo.xml), [`io.github.lukasz_sklad.dsh_tui.desktop`](packaging/flatpak/io.github.lukasz_sklad.dsh_tui.desktop) i [`LICENSE`](LICENSE) spełniają wymagania walidacji AppStream i `flatpak-builder`.
+
+### Jak zgłosić aplikację do Flathub (`github.com/flathub/flathub`)
+
+1. Utwórz fork repozytorium `flathub/flathub` (na gałęzi `new-pr`).
+2. Utwórz tag wydania w `lukasz-sklad/dsh-tui` (np. `v0.3.0`).
+3. W swoim forku `flathub/flathub` dodaj pliki z `packaging/flatpak/` (zmieniając źródło `type: dir, path: ../..` w manifeście na `type: git` z `url: https://github.com/lukasz-sklad/dsh-tui.git`, `tag: v0.3.0` i `commit: <sha>`), a następnie otwórz Pull Request do `flathub/flathub:new-pr`.
+
+### Lokalne uruchomienie / instalacja paczki z GitHub Actions
 
 ```sh
 flatpak install --user dsh-tui-x86_64.flatpak
@@ -167,3 +175,9 @@ flatpak run io.github.lukasz_sklad.dsh_tui
 ```
 
 Wewnątrz Flatpaka skrypt `/app/bin/dsh-host` automatycznie deleguje wywołania do hostowego `dsh` przez `flatpak-spawn --host`.
+
+Po zmianie zależności w `Cargo.lock` zaktualizuj manifest źródeł Cargo:
+
+```sh
+python3 packaging/flatpak/generate-cargo-sources.py
+```

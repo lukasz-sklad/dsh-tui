@@ -2,6 +2,8 @@ app-id: io.github.lukasz_sklad.dsh_tui
 runtime: org.freedesktop.Platform
 runtime-version: '26.08'
 sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
 command: dsh-tui
 
 finish-args:
@@ -13,23 +15,20 @@ finish-args:
 modules:
   - name: dsh-tui
     buildsystem: simple
+    build-options:
+      append-path: /usr/lib/sdk/rust-stable/bin
+      env:
+        CARGO_HOME: /run/build/dsh-tui/cargo
     build-commands:
-      - install -Dm755 dsh-tui /app/bin/dsh-tui-bin
-      - install -Dm755 dsh-host.sh /app/bin/dsh-host
-      - install -Dm755 dsh-tui-wrapper.sh /app/bin/dsh-tui
-      - install -Dm644 io.github.lukasz_sklad.dsh_tui.desktop /app/share/applications/io.github.lukasz_sklad.dsh_tui.desktop
-      - install -Dm644 io.github.lukasz_sklad.dsh_tui.svg /app/share/icons/hicolor/scalable/apps/io.github.lukasz_sklad.dsh_tui.svg
-      - install -Dm644 io.github.lukasz_sklad.dsh_tui.metainfo.xml /app/share/metainfo/io.github.lukasz_sklad.dsh_tui.metainfo.xml
+      - cargo --offline build --release --locked
+      - install -Dm755 target/release/dsh-tui /app/bin/dsh-tui-bin
+      - install -Dm755 packaging/flatpak/dsh-host.sh /app/bin/dsh-host
+      - install -Dm755 packaging/flatpak/dsh-tui-wrapper.sh /app/bin/dsh-tui
+      - install -Dm644 packaging/flatpak/io.github.lukasz_sklad.dsh_tui.desktop /app/share/applications/io.github.lukasz_sklad.dsh_tui.desktop
+      - install -Dm644 packaging/flatpak/io.github.lukasz_sklad.dsh_tui.svg /app/share/icons/hicolor/scalable/apps/io.github.lukasz_sklad.dsh_tui.svg
+      - install -Dm644 packaging/flatpak/io.github.lukasz_sklad.dsh_tui.metainfo.xml /app/share/metainfo/io.github.lukasz_sklad.dsh_tui.metainfo.xml
+      - install -Dm644 LICENSE /app/share/licenses/io.github.lukasz_sklad.dsh_tui/LICENSE
     sources:
-      - type: file
-        path: ../../target/release/dsh-tui
-      - type: file
-        path: dsh-host.sh
-      - type: file
-        path: dsh-tui-wrapper.sh
-      - type: file
-        path: io.github.lukasz_sklad.dsh_tui.desktop
-      - type: file
-        path: io.github.lukasz_sklad.dsh_tui.svg
-      - type: file
-        path: io.github.lukasz_sklad.dsh_tui.metainfo.xml
+      - type: dir
+        path: ../..
+      - cargo-sources.json

@@ -1,4 +1,4 @@
-name: CI & Flatpak
+name: CI & Flatpak (Flathub-ready)
 
 on:
   push:
@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Test & Build (x86_64)
+  test:
+    name: Rust Tests & Check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,44 +24,39 @@ jobs:
       - name: Run unit tests
         run: cargo test --locked
 
-      - name: Build release binary
-        run: cargo build --release --locked
-
-      - name: Upload release binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: dsh-tui-linux-x86_64
-          path: target/release/dsh-tui
-          if-no-files-found: error
-
   flatpak:
-    name: Build Flatpak Bundle (x86_64)
+    name: Build Flatpak from Source (Flathub Offline Mode)
     runs-on: ubuntu-latest
-    needs: build
+    needs: test
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download release binary
-        uses: actions/download-artifact@v4
-        with:
-          name: dsh-tui-linux-x86_64
-          path: target/release
+      - name: Verify cargo-sources.json is up to date
+        run: |
+          cp packaging/flatpak/cargo-sources.json /tmp/cargo-sources.expected.json
+          python3 packaging/flatpak/generate-cargo-sources.py
+          diff -u /tmp/cargo-sources.expected.json packaging/flatpak/cargo-sources.json
 
-      - name: Mark binary executable
-        run: chmod +x target/release/dsh-tui
-
-      - name: Install Flatpak tools
+      - name: Install Flatpak & AppStream validators
         run: |
           sudo apt-get update
-          sudo apt-get install -y flatpak flatpak-builder
+          sudo apt-get install -y flatpak flatpak-builder desktop-file-utils appstream
 
-      - name: Install Freedesktop 26.08 Runtime & SDK
+      - name: Validate Desktop & AppStream metadata
+        run: |
+          desktop-file-validate packaging/flatpak/io.github.lukasz_sklad.dsh_tui.desktop
+          appstreamcli validate --no-net packaging/flatpak/io.github.lukasz_sklad.dsh_tui.metainfo.xml
+
+      - name: Install Freedesktop 26.08 Runtime, SDK & rust-stable
         run: |
           flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
-          flatpak install --user -y --noninteractive flathub org.freedesktop.Platform//26.08 org.freedesktop.Sdk//26.08
+          flatpak install --user -y --noninteractive flathub \
+            org.freedesktop.Platform//26.08 \
+            org.freedesktop.Sdk//26.08 \
+            org.freedesktop.Sdk.Extension.rust-stable//26.08
 
-      - name: Build Flatpak bundle
+      - name: Build Flatpak bundle offline from source
         run: |
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
           flatpak-builder --user --force-clean --disable-rofiles-fuse --repo=repo build-dir packaging/flatpak/io.github.lukasz_sklad.dsh_tui.yml

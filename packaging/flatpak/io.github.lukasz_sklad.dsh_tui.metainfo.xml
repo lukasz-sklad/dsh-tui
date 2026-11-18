@@ -4,19 +4,38 @@
   <metadata_license>FSFAP</metadata_license>
   <project_license>MIT</project_license>
   <name>dsh-tui</name>
-  <summary>Terminalowy klient czatu dla DeepSeek Harness (dsh --profile sdk)</summary>
+  <summary>Terminalowy klient czatu dla DeepSeek Harness</summary>
+  <developer id="io.github.lukasz_sklad">
+    <name>Łukasz Skład</name>
+  </developer>
   <description>
     <p>
       dsh-tui jest pełnoekranowym interfejsem terminalowym (ratatui) oraz narzędziem
-      wiersza poleceń dla agenta DeepSeek Harness. Obsługuje sesje, tryby uprawnień,
-      bloki myślenia, podgląd diffów, motywy kolorystyczne oraz wyjście JSON/NDJSON.
+      wiersza poleceń dla agenta DeepSeek Harness (dsh --profile sdk).
+    </p>
+    <p>
+      Obsługuje trwałe sesje, tryby uprawnień, bloki myślenia modelu, autouzupełnianie
+      komend i plików, kolorowanie składni, podgląd diffów, motywy kolorystyczne oraz
+      tryb nieinteraktywny z wyjściem tekstowym, JSON i NDJSON.
     </p>
   </description>
+  <launchable type="desktop-id">io.github.lukasz_sklad.dsh_tui.desktop</launchable>
   <url type="homepage">https://github.com/lukasz-sklad/dsh-tui</url>
+  <url type="bugtracker">https://github.com/lukasz-sklad/dsh-tui/issues</url>
+  <url type="vcs-browser">https://github.com/lukasz-sklad/dsh-tui</url>
   <provides>
     <binary>dsh-tui</binary>
   </provides>
+  <branding>
+    <color type="primary" scheme_preference="light">#0284c7</color>
+    <color type="primary" scheme_preference="dark">#18181b</color>
+  </branding>
+  <content_rating type="oars-1.1"/>
   <releases>
-    <release version="0.3.0" date="2026-11-18"/>
+    <release version="0.3.0" date="2026-11-18">
+      <description>
+        <p>Wydanie 0.3.0 z pełnym interfejsem TUI, motywami, obsługą sesji, modalami oraz paczką Flatpak.</p>
+      </description>
+    </release>
   </releases>
 </component>

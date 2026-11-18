@@ -3,6 +3,9 @@ name = "dsh-tui"
 version = "0.3.0"
 edition = "2024"
 description = "Terminal chat client driving dsh --profile sdk over the NDJSON JSON-RPC stdio protocol."
+license = "MIT"
+repository = "https://github.com/lukasz-sklad/dsh-tui"
+homepage = "https://github.com/lukasz-sklad/dsh-tui"
 
 [dependencies]
 base64 = "0.22"
