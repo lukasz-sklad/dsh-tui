@@ -25,12 +25,12 @@ Program uruchamia `dsh --profile sdk` jako proces potomny i komunikuje się prze
 ## Instalacja
 
 ```sh
-./install.sh            # buduje release (-O3, Fat LTO, znver2) i kopiuje do ~/.local/bin/dsh-tui
+./install.sh            # buduje release (-O3, Fat LTO; automatyczne znver2 na SteamOS) i kopiuje do ~/.local/bin/dsh-tui
 # albo
 cargo install --path .
 ```
 
-Skrypt `install.sh` automatycznie wykrywa lokalne `cargo`, a na systemach bez kompilatora w hostowym `PATH` (np. SteamOS) uruchamia kompilację w kontenerze Podman `localhost/craft-builder:latest` z cache na dysku NVMe (`~/.cache/cargo` i `~/.cache/dsh-tui-target`).
+Skrypt `install.sh` automatycznie wykrywa lokalne `cargo` oraz procesor (na Steam Decku / SteamOS włącza `-C target-cpu=znver2`, na innych maszynach buduje przenośnie, chyba że podano `RUSTFLAGS`), a w razie braku kompilatora w hostowym `PATH` uruchamia kompilację w kontenerze Podman `localhost/craft-builder:latest` z cache na dysku NVMe (`~/.cache/cargo` i `~/.cache/dsh-tui-target`).
 
 ---
 

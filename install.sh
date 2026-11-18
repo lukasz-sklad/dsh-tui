@@ -7,7 +7,15 @@ BIN_DIR="$PREFIX/bin"
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 TARGET_DIR="${CARGO_TARGET_DIR:-$HOME/.cache/dsh-tui-target}"
 CARGO_CACHE="${CARGO_HOME:-$HOME/.cache/cargo}"
-RUSTFLAGS_VAL="${RUSTFLAGS:--C target-cpu=znver2}"
+
+if [ -n "${RUSTFLAGS:-}" ]; then
+    RUSTFLAGS_VAL="$RUSTFLAGS"
+elif grep -qiE 'AMD Custom (APU|CPU)' /proc/cpuinfo 2>/dev/null \
+    || grep -qE '^(Jupiter|Galileo|Fremont)$' /sys/devices/virtual/dmi/id/product_name 2>/dev/null; then
+    RUSTFLAGS_VAL="-C target-cpu=znver2"
+else
+    RUSTFLAGS_VAL=""
+fi
 
 mkdir -p "$BIN_DIR" "$TARGET_DIR"
 
