@@ -157,7 +157,7 @@ Domyślnie w `~/.dsh/dsh-tui/`:
 
 Repozytorium zawiera gotowy manifest [`packaging/flatpak/io.github.lukasz_sklad.dsh_tui.yml`](packaging/flatpak/io.github.lukasz_sklad.dsh_tui.yml) oraz workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml), który po każdym wypchnięciu na gałąź `main`:
 1. Uruchamia `cargo test --locked` i buduje binarkę `target/release/dsh-tui`.
-2. Składa paczkę Flatpak (`dsh-tui-x86_64.flatpak`) w środowisku `org.freedesktop.Platform//24.08` i publikuje ją jako artefakt w zakładce **Actions**.
+2. Składa paczkę Flatpak (`dsh-tui-x86_64.flatpak`) w środowisku `org.freedesktop.Platform//26.08` i publikuje ją jako artefakt w zakładce **Actions**.
 
 Instalacja pobranej paczki `.flatpak`:
 
