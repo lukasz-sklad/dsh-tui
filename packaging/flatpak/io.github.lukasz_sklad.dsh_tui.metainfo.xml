@@ -20,6 +20,16 @@
     </p>
   </description>
   <launchable type="desktop-id">io.github.lukasz_sklad.dsh_tui.desktop</launchable>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Główny widok TUI z kolorowaniem składni, podglądem diffów i panelem narzędzi</caption>
+      <image type="source" width="1280" height="800">https://raw.githubusercontent.com/lukasz-sklad/dsh-tui/main/packaging/flatpak/screenshots/dsh-tui-chat.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Interaktywny modal wyboru modelu oraz poziomu rozumowania</caption>
+      <image type="source" width="1280" height="800">https://raw.githubusercontent.com/lukasz-sklad/dsh-tui/main/packaging/flatpak/screenshots/dsh-tui-modals.png</image>
+    </screenshot>
+  </screenshots>
   <url type="homepage">https://github.com/lukasz-sklad/dsh-tui</url>
   <url type="bugtracker">https://github.com/lukasz-sklad/dsh-tui/issues</url>
   <url type="vcs-browser">https://github.com/lukasz-sklad/dsh-tui</url>

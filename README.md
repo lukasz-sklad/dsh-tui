@@ -6,6 +6,14 @@ Program uruchamia `dsh --profile sdk` jako proces potomny i komunikuje się prze
 
 ---
 
+## Zrzuty ekranu
+
+![Widok główny dsh-tui](packaging/flatpak/screenshots/dsh-tui-chat.png)
+
+![Modal wyboru modelu i poziomu effort](packaging/flatpak/screenshots/dsh-tui-modals.png)
+
+---
+
 ## Wymagania
 
 - `dsh` w `PATH` (`npm i -g @deepseek-ai/dsh`) — albo zmienna `DSH_BIN=/ścieżka/do/dsh`
